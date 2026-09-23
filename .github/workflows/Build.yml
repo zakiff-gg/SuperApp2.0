@@ -1,15 +1,11 @@
-# File Path: .github/workflows/build.yml
-# CI/CD: setiap push ke main/master otomatis build APK Debug dan diunggah sebagai Artifact.
-# Catatan: workflow ini memakai action gradle/actions/setup-gradle sehingga TIDAK butuh
-# berkas biner gradle-wrapper.jar di repo (jar biner tidak bisa ditulis lewat teks/browser).
-# Jika Anda sudah punya gradlew + gradle-wrapper.jar sendiri, ganti langkah "Build" di bawah
-# dengan: run: ./gradlew assembleDebug
-name: Build Absen SSP APK
+name: Android CI Build
 
 on:
   push:
-    branches: [ "main", "master" ]
-  workflow_dispatch: {}
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -27,17 +23,20 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: "8.7"
+          cmdline-tools-version: 12266719
+          accept-android-sdk-licenses: true
+          log-accepted-android-sdk-licenses: true
+          packages: platform-tools
 
-      - name: Build Debug APK
-        run: gradle assembleDebug --stacktrace
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
 
-      - name: Upload APK Artifact
+      - name: Build with Gradle
+        run: ./gradlew assembleRelease --stacktrace
+
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AbsenSSP-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: app-release
+          path: app/build/outputs/apk/release/*.apk
