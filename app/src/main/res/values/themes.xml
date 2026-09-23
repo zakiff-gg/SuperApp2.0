@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- File Path: app/src/main/res/values/themes.xml -->
+<resources>
+    <style name="Theme.AbsenSSP" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/navy_dark</item>
+        <item name="android:windowBackground">@color/cream_bg</item>
+    </style>
+</resources>

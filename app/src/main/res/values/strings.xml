@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- File Path: app/src/main/res/values/strings.xml -->
+<resources>
+    <string name="app_name">SSP Super App</string>
+    <string name="company_name">PT Sirla Sirli Puteri</string>
+</resources>

@@ -1,0 +1,209 @@
+<!-- File Path: google-apps-script/Index.html -->
+<!-- CARA PASANG: di editor Apps Script, klik ikon "+" di sebelah "Files" > HTML,
+     beri nama file PERSIS "Index" (tanpa .html, Apps Script otomatis menambahkannya),
+     lalu salin-tempel SELURUH isi file ini ke sana. -->
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px 20px 60px;
+      background: #F6F2EA;
+      color: #0C1B3A;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+    h1 { font-size: 24px; margin: 0 0 4px; font-weight: 800; }
+    .sub { color: #8A8A8E; font-size: 14px; margin-bottom: 22px; }
+    input[type=text] {
+      width: 100%;
+      padding: 14px 18px;
+      border-radius: 50px;
+      border: 1px solid #E3E0D8;
+      font-size: 16px;
+      outline: none;
+      background: #FFFFFF;
+    }
+    input[type=text]:focus { border-color: #2F4C8C; }
+    #listHasil { margin-top: 10px; }
+    .hasil-nama {
+      background: #FFFFFF;
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+    .hasil-nama b { font-size: 16px; }
+    .card { background: #FFFFFF; border-radius: 20px; padding: 20px; margin-top: 16px; }
+    .label { color: #8A8A8E; font-size: 12px; letter-spacing: 0.3px; text-transform: uppercase; }
+    .value { font-size: 30px; font-weight: 800; margin: 4px 0 14px; }
+    .riwayat-item { border-bottom: 1px solid #F0EEE8; padding: 12px 0; }
+    .riwayat-item:last-child { border-bottom: none; }
+    .tipe-masuk { color: #2E7D32; font-weight: 700; }
+    .tipe-pulang { color: #E4211F; font-weight: 700; }
+    button.back {
+      background: none;
+      border: none;
+      color: #2F4C8C;
+      font-size: 14px;
+      margin: 4px 0 4px;
+      padding: 0;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .kosong { color: #8A8A8E; font-size: 14px; padding: 16px 4px; }
+    .footer { text-align: center; color: #B7B3A8; font-size: 12px; margin-top: 40px; }
+    .status-cek { color: #8A8A8E; font-size: 12px; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Absen SSP</h1>
+  <div class="sub">Cari nama untuk melihat jumlah &amp; riwayat kehadiran</div>
+
+  <input type="text" id="cari" placeholder="Ketik nama karyawan..." autocomplete="off">
+  <div class="status-cek" id="statusCek"></div>
+
+  <div id="listHasil"></div>
+  <div id="detail"></div>
+
+  <div class="footer">PT Sirla Sirli Puteri &middot; Absen SSP</div>
+
+  <script>
+    var timer = null;
+
+    document.getElementById('cari').addEventListener('input', function () {
+      clearTimeout(timer);
+      var q = this.value;
+      document.getElementById('detail').innerHTML = '';
+
+      if (q.trim().length < 2) {
+        document.getElementById('listHasil').innerHTML = '';
+        document.getElementById('statusCek').innerText = '';
+        return;
+      }
+
+      document.getElementById('statusCek').innerText = 'Mencari...';
+      timer = setTimeout(function () {
+        google.script.run
+          .withSuccessHandler(tampilkanHasil)
+          .withFailureHandler(tampilkanErrorPencarian)
+          .webCariNama(q);
+      }, 300);
+    });
+
+    function esc(s) {
+      var d = document.createElement('div');
+      d.innerText = (s === undefined || s === null) ? '' : String(s);
+      return d.innerHTML;
+    }
+
+    function tampilkanErrorPencarian(err) {
+      document.getElementById('statusCek').innerText = '';
+      document.getElementById('listHasil').innerHTML =
+        '<div class="kosong">Gagal mencari: ' + esc(err.message || err) + '</div>';
+    }
+
+    function tampilkanHasil(list) {
+      document.getElementById('statusCek').innerText = '';
+      var el = document.getElementById('listHasil');
+
+      if (!list || list.length === 0) {
+        el.innerHTML = '<div class="kosong">Tidak ditemukan.</div>';
+        return;
+      }
+
+      var html = '';
+      for (var i = 0; i < list.length; i++) {
+        var k = list[i];
+        html += '<div class="hasil-nama" data-uid="' + esc(k.uid) + '">' +
+          '<b>' + esc(k.nama) + '</b><br>' +
+          '<span class="sub" style="margin:0">' + esc(k.posisi) + '</span></div>';
+      }
+      el.innerHTML = html;
+
+      var rows = el.getElementsByClassName('hasil-nama');
+      for (var j = 0; j < rows.length; j++) {
+        rows[j].addEventListener('click', function () {
+          pilihKaryawan(this.getAttribute('data-uid'));
+        });
+      }
+    }
+
+    function pilihKaryawan(uid) {
+      document.getElementById('listHasil').innerHTML = '';
+      document.getElementById('cari').value = '';
+      document.getElementById('detail').innerHTML = '<div class="kosong">Memuat...</div>';
+
+      var sudahSelesai = false;
+      var batasWaktu = setTimeout(function () {
+        if (!sudahSelesai) {
+          document.getElementById('detail').innerHTML =
+            '<div class="kosong">Server tidak merespons. Coba ketuk namanya lagi, atau refresh halaman.</div>';
+        }
+      }, 10000);
+
+      google.script.run
+        .withSuccessHandler(function (data) {
+          sudahSelesai = true;
+          clearTimeout(batasWaktu);
+          tampilkanDetail(data);
+        })
+        .withFailureHandler(function (err) {
+          sudahSelesai = true;
+          clearTimeout(batasWaktu);
+          tampilkanErrorDetail(err);
+        })
+        .webRiwayatKaryawan(uid);
+    }
+
+    function tampilkanErrorDetail(err) {
+      document.getElementById('detail').innerHTML =
+        '<div class="kosong">Gagal memuat data: ' + esc(err.message || err) + '</div>';
+    }
+
+    function tampilkanDetail(data) {
+      if (data.error) {
+        document.getElementById('detail').innerHTML = '<div class="kosong">' + esc(data.error) + '</div>';
+        return;
+      }
+
+      var riwayatHtml = '';
+      if (!data.riwayat || data.riwayat.length === 0) {
+        riwayatHtml = '<div class="kosong">Belum ada riwayat.</div>';
+      } else {
+        for (var i = 0; i < data.riwayat.length; i++) {
+          var r = data.riwayat[i];
+          var kelasJenis = r.jenis === 'Berangkat' ? 'tipe-masuk' : 'tipe-pulang';
+          var subKet = esc(r.proyek) + (r.keterangan ? ' &middot; ' + esc(r.keterangan) : '');
+          riwayatHtml += '<div class="riwayat-item">' +
+            '<div>' + esc(r.tanggal) + ' &middot; ' + esc(r.jam) +
+            ' &middot; <span class="' + kelasJenis + '">' + esc(r.jenis) + '</span></div>' +
+            '<div class="sub" style="margin:2px 0 0">' + subKet + '</div></div>';
+        }
+      }
+
+      var html =
+        '<button class="back" id="btnKembali">&larr; Cari lagi</button>' +
+        '<div class="card">' +
+        '<div style="font-size:19px;font-weight:800">' + esc(data.nama) + '</div>' +
+        '<div class="sub" style="margin:2px 0 14px">' + esc(data.posisi) + '</div>' +
+        '<div class="label">Total Hari Kerja</div>' +
+        '<div class="value">' + data.totalHariKerja + ' Hari</div>' +
+        '<div class="sub" style="margin-top:-8px">Berangkat = 0.5 hari, Pulang = 0.5 hari</div>' +
+        '</div>' +
+        '<div class="card">' +
+        '<div class="label" style="margin-bottom:8px">Riwayat Kehadiran</div>' +
+        riwayatHtml +
+        '</div>';
+
+      document.getElementById('detail').innerHTML = html;
+      document.getElementById('btnKembali').addEventListener('click', function () {
+        document.getElementById('detail').innerHTML = '';
+      });
+    }
+  </script>
+</body>
+</html>

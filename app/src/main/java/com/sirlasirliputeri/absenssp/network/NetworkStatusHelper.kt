@@ -1,0 +1,16 @@
+// File Path: app/src/main/java/com/sirlasirliputeri/absenssp/network/NetworkStatusHelper.kt
+package com.sirlasirliputeri.absenssp.network
+
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+
+object NetworkStatusHelper {
+    fun isOnline(context: Context): Boolean {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = cm.activeNetwork ?: return false
+        val capabilities = cm.getNetworkCapabilities(network) ?: return false
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+            capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+    }
+}

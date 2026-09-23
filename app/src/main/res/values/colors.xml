@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- File Path: app/src/main/res/values/colors.xml -->
+<resources>
+    <color name="navy_dark">#0C1B3A</color>
+    <color name="red_accent">#E4211F</color>
+    <color name="cream_bg">#F6F2EA</color>
+    <color name="blue_gray">#2F4C8C</color>
+    <color name="white">#FFFFFF</color>
+    <color name="green_success">#2E7D32</color>
+    <color name="orange_warning">#F57C00</color>
+</resources>

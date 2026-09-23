@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- File Path: app/src/main/AndroidManifest.xml -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.NFC" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-feature android:name="android.hardware.nfc" android:required="true" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+
+    <application
+        android:name=".AbsenApp"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:theme="@style/Theme.AbsenSSP"
+        android:usesCleartextTraffic="false"
+        tools:targetApi="31">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AbsenSSP">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- Menangkap event tap NFC walau app sedang di background -->
+            <intent-filter>
+                <action android:name="android.nfc.action.TECH_DISCOVERED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.nfc.action.TECH_DISCOVERED"
+                android:resource="@xml/nfc_tech_filter" />
+        </activity>
+
+        <!-- Modul Invoice: input berkas invoice (scan multi-halaman jadi PDF), catat
+             tujuan & nominal, serta monitoring status pembayaran. Memakai Google
+             Spreadsheet & Apps Script TERPISAH dari modul tool management/absen
+             (lihat com.sirlasirliputeri.absenssp.invoice.InvoiceConfig).
+             Sudah full Compose (bukan XML lagi), pakai Theme.AbsenSSP yang sama
+             dengan MainActivity, BUKAN Theme.AbsenSSP.Invoice/AppCompat lama. -->
+        <activity
+            android:name=".invoice.InvoiceFormActivity"
+            android:exported="false"
+            android:label="Invoice Baru"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AbsenSSP" />
+        <activity
+            android:name=".invoice.InvoiceMonitoringActivity"
+            android:exported="false"
+            android:label="Monitoring Invoice"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AbsenSSP" />
+        <activity
+            android:name=".invoice.InvoiceDetailActivity"
+            android:exported="false"
+            android:label="Detail Invoice"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AbsenSSP" />
+    </application>
+</manifest>
